@@ -573,6 +573,34 @@ ngx_http_lua_ffi_ssl_get_tls1_version(ngx_http_request_t *r, char **err)
     return SSL_version(ssl_conn);
 }
 
+int
+ngx_http_lua_ffi_ssl_set_cipher_list(ngx_http_request_t *r, const char *ciphers,char **err)
+{
+    ngx_ssl_conn_t    *ssl_conn;
+    const char * default_ciphers    =   "ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4:!DH:!DHE";
+
+    if (r->connection == NULL || r->connection->ssl == NULL) {
+        *err = "bad request";
+        return NGX_ERROR;
+    }
+
+    ssl_conn = r->connection->ssl->connection;
+    if (ssl_conn == NULL) {
+        *err = "bad ssl conn";
+        return NGX_ERROR;
+    }
+
+   if (SSL_set_cipher_list(ssl_conn, ciphers) == 0) {
+        
+        if (SSL_set_cipher_list(ssl_conn, default_ciphers) == 0) {
+            *err = "SSL_set_cipher_list default_ciphers failed";
+            return NGX_ERROR;
+        }
+        *err = "SSL_set_cipher_list failed";
+        return NGX_;
+    }
+    return NGX_OK;
+}
 
 int
 ngx_http_lua_ffi_ssl_clear_certs(ngx_http_request_t *r, char **err)
